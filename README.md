@@ -16,14 +16,13 @@ This repository contains a real-time **step counting system** based on the **FRD
 - **Live visualization** of acceleration, magnitude, and detected steps in real-time.
 
 #### **Features**
-![Preview](testy.png)
+![Preview](MATLAB/MeasurementsWithTitles.png)
 *Screenshot 1: Real-time step detection visualization in MATLAB.*
 
 
- 
+
 
 ## **How to Use**
 1. **Flash the firmware** onto the **FRDM-KL05Z** microcontroller.
 2. **Connect the microcontroller to the PC** via a serial (UART) connection.
 3. **Run the MATLAB script** to start real-time step detection and visualization.
-
