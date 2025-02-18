@@ -1,7 +1,7 @@
 function matlabFilterTests()
 
     %% ======================== UART & Global Variables =========================
-    % Configure the serial port (adjust 'COM6' and baud rate as needed)
+    % Configure the serial port
     serialPort = serialport('COM6', 9600);
 
     % Global lines for step detection in subplots 2 and 3
@@ -157,13 +157,13 @@ function matlabFilterTests()
     end
 
     % Thresholds and minimal sample distance for local maxima (per axis)
-    hpfPeakThreshold = 0.3;
-    bpfPeakThreshold = 0.3;
+    hpfPeakThreshold = 0.6;
+    bpfPeakThreshold = 0.4;
     minHPFSampleDist = 3;  % at Fs=10 -> 0.3 s
     minBPFSampleDist = 7;
 
     % Threshold for run/walk decision on Subplot 6
-    runWalkThreshold6 = 1.3;
+    runWalkThreshold6 = 0.4;
 
     %% === Persistent window buffers for local maxima detection ===
     % Fixed-size buffers (last 3 values) to avoid dynamic array growth
@@ -287,9 +287,8 @@ function matlabFilterTests()
                     addpoints(hLineHPFMax, sampleIndex - 1, hpfWin(2));
                     
                     % For Subplot 6: use HPF marker if magnitude exceeds threshold
-                    if magHPF > runWalkThreshold6
-                        addpoints(hLine6HPFRunMag, sampleIndex - 1, hpfWin(2));
-                    end
+                    writeline(serialPort, 'RUN++');  % send uart RUN++
+                    addpoints(hLine6HPFRunMag, sampleIndex - 1, hpfWin(2));
                     lastHPFpeakIndex = sampleIndex - 1;
                 end
             end
@@ -325,7 +324,8 @@ function matlabFilterTests()
                     addpoints(hLineBPFMax, sampleIndex - 1, bpfWin(2));
                     
                     % For Subplot 6: use BPF marker if HPF magnitude does not exceed threshold
-                    if magHPF <= runWalkThreshold6
+                    if (sampleIndex-lastHPFpeakIndex >= 4)
+                        writeline(serialPort, 'WALK++'); % send uart WALK++
                         addpoints(hLine6BPFRunMag, sampleIndex - 1, bpfWin(2));
                     end
                     lastBPFpeakIndex = sampleIndex - 1;
