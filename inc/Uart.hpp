@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2024 Miroslaw Baca
- * AGH - Object-Oriented Programming Language
+ * Copyright (c) 2025 Miroslaw Baca
+ * AGH - Design Lab
  */
 
 /**
@@ -20,7 +20,6 @@ extern "C" {
 extern "C" void UART0_IRQHandler(void);
 
 
-namespace mb { // Start of namespace mb
 	
 class CommunicationModuleMCU;       // Forward declaration
 
@@ -85,5 +84,4 @@ private:
 
     friend void ::UART0_IRQHandler(); // Allows the global IRQ handler to invoke private handleIRQ().
 };
-} // End of namespace mb
 #endif // UART_HPP

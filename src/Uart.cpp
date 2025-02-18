@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2024 Miroslaw Baca
- * AGH - Object-Oriented Programming Language
+ * Copyright (c) 2025 Miroslaw Baca
+ * AGH - Design Lab
  */
 
 /**
@@ -9,16 +9,21 @@
  */
 
 #include "../inc/Uart.hpp"
-#include "../inc/CommunicationModuleMCU.hpp"
+#include "../inc/Lcd.hpp"
+#include <cstring>
+#include <cstdio>
 
-mb::CommunicationModuleMCU* mb::Uart::g_commObject = nullptr;
+
+CommunicationModuleMCU* Uart::g_commObject = nullptr;
 
 extern "C" void UART0_IRQHandler(void)
 {
-	mb::Uart::handleIRQ();
+	Uart::handleIRQ();
 }
 
-namespace mb {
+extern uint32_t WalkStep;
+extern uint32_t RunStep;
+
 
 Uart::Uart() : Uart(9600, nullptr)
 {
@@ -105,17 +110,59 @@ void Uart::sendChar(char c)
     }
     UART0->D = static_cast<uint8_t>(c);
 }
-
 void Uart::handleIRQ()
 {
-    while (UART0->S1 & UART0_S1_RDRF_MASK)
+    // Static buffer to store incoming characters
+    static char rxBuffer[16];
+    static uint8_t rxIndex = 0;
+    
+    // Check if a new byte has been received
+    if (UART0->S1 & UART0_S1_RDRF_MASK)
     {
-        char c = static_cast<char>(UART0->D);
-        if (g_commObject)
+        // Read one byte from the UART data register
+        char received = static_cast<char>(UART0->D);
+        
+        // If a newline or carriage return is received, treat it as the end of the message
+        if (received == '\n' || received == '\r')
         {
-            g_commObject->onCharReceived(c);
+            rxBuffer[rxIndex] = '\0';  // Terminate the string
+            
+            // Check if the received message is "WALK++" or "RUN++"
+            if (strcmp(rxBuffer, "WALK++") == 0)
+            {
+								WalkStep++;
+            }
+            else if (strcmp(rxBuffer, "RUN++") == 0)
+            {
+								RunStep++;
+            }
+            // Reset the buffer index for the next message
+            rxIndex = 0;
+						
+						char lcdBuffer[32];  // Buffer for LCD output
+						lcd::clearAll();
+						lcd::setCursor(0, 0);
+						lcd::print("S9 = RESET");
+						lcd::setCursor(0, 1);
+						lcd::blinkOn();
+						sprintf(lcdBuffer, "Walk: %lu Run: %lu", WalkStep, RunStep);
+						
+						//lcd::clearAll();
+						lcd::setCursor(0, 1);
+						lcd::print(lcdBuffer);
+        }
+        else
+        {
+            // If there's still space in the buffer, store the character
+            if (rxIndex < sizeof(rxBuffer) - 1)
+            {
+                rxBuffer[rxIndex++] = received;
+            }
+            else
+            {
+                // If the buffer is full, reset it
+                rxIndex = 0;
+            }
         }
     }
 }
-
-} // End of namespace mb
